@@ -36,7 +36,7 @@ func (hc *HuobiClient) Query(client influx.Client, output chan string) {
 			jsonString, metric, err := handle()
 
 			if err != nil {
-				log.Println(err)
+				log.Println(name+":", err)
 				return
 			}
 

@@ -231,5 +231,7 @@ func HttpGet(req HttpRequest, data interface{}) (string, error) {
 		return "", err
 	}
 
-	return resp.String(), nil
+	outString := resp.String()
+
+	return outString, nil
 }
