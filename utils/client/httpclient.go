@@ -167,26 +167,13 @@ type HttpResponse struct {
 	*http.Response
 }
 
-func (res *HttpResponse) String() string {
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if nil != err {
-		return err.Error()
-	}
-
-	return string(body)
-}
-
-func (res *HttpResponse) Unmarshal(dest interface{}) (err error) {
+func (res *HttpResponse) Unmarshal(dest interface{}) (string, error) {
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	// log.Println(res.Request.URL.String())
-
-	return json.Unmarshal(body, dest)
+	return string(body), json.Unmarshal(body, dest)
 }
 
 func (res *HttpResponse) Link(name string) string {
@@ -227,10 +214,12 @@ func HttpGet(req HttpRequest, data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
-	if err = resp.Unmarshal(data); err != nil {
+	var jsonStr string
+	if jsonStr, err = resp.Unmarshal(data); err != nil {
 		return "", err
 	}
 
-	return resp.String(), nil
+	return jsonStr, nil
 }

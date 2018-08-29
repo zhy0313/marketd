@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"time"
 
@@ -26,19 +27,39 @@ func market(ctx dotweb.Context) error {
 	var strMsg string
 
 	for {
-		ctx.WebSocket().SendMessage(fmt.Sprintf("{\"ping\":%d", time.Now().UnixNano()/1000000))
+		ctx.WebSocket().SendMessage(fmt.Sprintf("{\"ping\":%d}", time.Now().UnixNano()/1000000))
 
 		if strMsg, err = ctx.WebSocket().ReadMessage(); err != nil {
-			ctx.WebSocket().SendMessage("connect has a error => " + err.Error())
-			log.Warn("ReadMessage error => "+err.Error(), "HttpRequest")
+			if err == io.EOF {
+				ctx.WebSocket().Conn.WriteClose(websocket.CloseNormalClosure)
+				ctx.WebSocket().Conn.Close()
+				break
+			}
+
+			log.Warn(err)
+
 			break
 		} else {
 			hb := new(HeartBeat)
-
 			if err := json.Unmarshal([]byte(strMsg), hb); err != nil {
 				ctx.WebSocket().Conn.WriteClose(websocket.CloseNormalClosure)
+				ctx.WebSocket().Conn.Close()
+				return err
 			}
-			ctx.WebSocket().SendMessage(fmt.Sprintf("{\"ping\":%d", time.Now().UnixNano()/1000000))
+
+			for _, srv := range services {
+				m, err := markets.Open(srv)
+				if err != nil {
+					log.Fatal(err)
+				}
+				rows := &markets.Rows{
+					Data: make(map[string]markets.Metric),
+				}
+
+				for info := range m.Query(rows) {
+					ctx.WebSocket().SendMessage(info)
+				}
+			}
 		}
 	}
 

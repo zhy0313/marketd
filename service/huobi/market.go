@@ -34,9 +34,9 @@ var (
 		"depth":         getMarketDepth,
 		"trade":         getTradeDetail,
 		"detail":        getMarketDetail,
-		"symbols":       getSymbols,
-		"currencys":     getCurrencys,
-		"timestamp":     getTimestamp,
+		// "symbols":       getSymbols,
+		"currencys": getCurrencys,
+		"timestamp": getTimestamp,
 	}
 )
 
@@ -66,7 +66,7 @@ func genericFunc(url string, query map[string]string, data markets.Metric) Handl
 // return: string
 func getKLine() (string, markets.Metric, error) {
 	getJson := genericFunc(
-		tradeAPI["kline"],
+		marketAPI["kline"],
 		map[string]string{
 			"symbol": "btcusdt",
 			"period": "1min",
@@ -80,7 +80,7 @@ func getKLine() (string, markets.Metric, error) {
 // 交易对, btcusdt, bccbtc......
 // return: string
 func getTicker() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["detail_merged"], map[string]string{"symbol": "btcusdt"}, new(TickerReturn))
+	getJson := genericFunc(marketAPI["detail_merged"], map[string]string{"symbol": "btcusdt"}, new(TickerReturn))
 	return getJson()
 }
 
@@ -89,7 +89,7 @@ func getTicker() (string, markets.Metric, error) {
 // Depth类型, step0、step1......stpe5 (合并深度0-5, 0时不合并)
 // return: string
 func getMarketDepth() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["depth"], map[string]string{"symbol": "btcusdt", "type": "step1"}, new(MarketDepthReturn))
+	getJson := genericFunc(marketAPI["depth"], map[string]string{"symbol": "btcusdt", "type": "step1"}, new(MarketDepthReturn))
 	return getJson()
 }
 
@@ -97,7 +97,7 @@ func getMarketDepth() (string, markets.Metric, error) {
 // 交易对, btcusdt, bccbtc......
 // return: string
 func getTradeDetail() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["trade"], map[string]string{"symbol": "btcusdt"}, new(TradeDetailReturn))
+	getJson := genericFunc(marketAPI["trade"], map[string]string{"symbol": "btcusdt"}, new(TradeDetailReturn))
 	return getJson()
 }
 
@@ -105,7 +105,7 @@ func getTradeDetail() (string, markets.Metric, error) {
 // 交易对, btcusdt, bccbtc......
 // return: string
 func getMarketDetail() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["detail"], map[string]string{"symbol": "btcusdt"}, new(MarketDetailReturn))
+	getJson := genericFunc(marketAPI["detail"], map[string]string{"symbol": "btcusdt"}, new(MarketDetailReturn))
 	return getJson()
 }
 

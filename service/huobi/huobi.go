@@ -44,7 +44,8 @@ func (hc *HuobiClient) Query(rows *markets.Rows) (out chan string) {
 			}
 
 			result.Add(name, metric)
-			out <- jsonString
+
+			out <- "{" + "\"" + name + "\":" + jsonString + "}"
 		}(name, rows, handle)
 	}
 	go func() {
