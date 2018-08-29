@@ -30,7 +30,7 @@ var (
 		"timestamp": HUOBI_TRADE + "/common/timestamp",
 	}
 
-	handlers = map[string]func() (string, markets.Metric){
+	handlers = map[string]func() (string, markets.Metric, error){
 		"kline":         getKLine,
 		"detail_merged": getTicker,
 		"depth":         getMarketDepth,
@@ -42,8 +42,8 @@ var (
 	}
 )
 
-func genericFunc(url string, query map[string]string, data markets.Metric) func() (string, markets.Metric) {
-	return func() (string, markets.Metric) {
+func genericFunc(url string, query map[string]string, data markets.Metric) func() (string, markets.Metric, error) {
+	return func() (string, markets.Metric, error) {
 		request := utils.HttpRequest{
 			Url:       url,
 			Payload:   query,
@@ -51,10 +51,10 @@ func genericFunc(url string, query map[string]string, data markets.Metric) func(
 		}
 		jsonStr, err := utils.HttpGet(request, data)
 		if err != nil {
-			return "", nil
+			return "", nil, err
 		}
 
-		return jsonStr, data
+		return jsonStr, data, nil
 	}
 }
 
@@ -66,7 +66,7 @@ func genericFunc(url string, query map[string]string, data markets.Metric) func(
 // K线类型, 1min, 5min, 15min......
 // 获取数量, [1-2000]
 // return: string
-func getKLine() (string, markets.Metric) {
+func getKLine() (string, markets.Metric, error) {
 	data := new(KLineReturn)
 
 	request := utils.HttpRequest{
@@ -81,16 +81,16 @@ func getKLine() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 // 获取聚合行情
 // 交易对, btcusdt, bccbtc......
 // return: string
-func getTicker() (string, markets.Metric) {
+func getTicker() (string, markets.Metric, error) {
 	data := new(TickerReturn)
 
 	request := utils.HttpRequest{
@@ -103,17 +103,17 @@ func getTicker() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 // 获取交易深度信息
 // 交易对, btcusdt, bccbtc......
 // Depth类型, step0、step1......stpe5 (合并深度0-5, 0时不合并)
 // return: string
-func getMarketDepth() (string, markets.Metric) {
+func getMarketDepth() (string, markets.Metric, error) {
 	data := new(MarketDepthReturn)
 
 	request := utils.HttpRequest{
@@ -127,16 +127,16 @@ func getMarketDepth() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 // 获取交易细节信息
 // 交易对, btcusdt, bccbtc......
 // return: string
-func getTradeDetail() (string, markets.Metric) {
+func getTradeDetail() (string, markets.Metric, error) {
 	data := new(TradeDetailReturn)
 
 	request := utils.HttpRequest{
@@ -149,16 +149,16 @@ func getTradeDetail() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 // 获取Market Detail 24小时成交量数据
 // 交易对, btcusdt, bccbtc......
 // return: string
-func getMarketDetail() (string, markets.Metric) {
+func getMarketDetail() (string, markets.Metric, error) {
 	data := new(MarketDetailReturn)
 
 	request := utils.HttpRequest{
@@ -171,10 +171,10 @@ func getMarketDetail() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 //------------------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ func getMarketDetail() (string, markets.Metric) {
 
 // 查询系统支持的所有交易及精度
 // return: string
-func getSymbols() (string, markets.Metric) {
+func getSymbols() (string, markets.Metric, error) {
 	data := new(SymbolsReturn)
 
 	request := utils.HttpRequest{
@@ -193,15 +193,15 @@ func getSymbols() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 // 查询系统支持的所有币种
 // return: string
-func getCurrencys() (string, markets.Metric) {
+func getCurrencys() (string, markets.Metric, error) {
 	data := new(CurrencysReturn)
 
 	request := utils.HttpRequest{
@@ -212,15 +212,15 @@ func getCurrencys() (string, markets.Metric) {
 
 	jsonStr, err := utils.HttpGet(request, data)
 	if err != nil {
-		return "", nil
+		return "", nil, err
 	}
 
-	return jsonStr, data
+	return jsonStr, data, nil
 }
 
 // 查询系统当前时间戳
 // return: string
-func getTimestamp() (string, markets.Metric) {
+func getTimestamp() (string, markets.Metric, error) {
 	getJson := genericFunc(tradeAPI["timestamp"], nil, new(TimestampReturn))
 	return getJson()
 }

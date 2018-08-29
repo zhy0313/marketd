@@ -11,9 +11,17 @@ import (
 type Huobi struct{}
 
 type HuobiClient struct {
+	closed chan struct{}
+	wg     sync.WaitGroup
+
 	MarketAPI map[string]string
 	TradeAPI  map[string]string
-	Handlers  map[string]func() (string, markets.Metric)
+	Handlers  map[string]func() (string, markets.Metric, error)
+}
+
+func (hc *HuobiClient) Close() {
+	close(hc.closed)
+	hc.wg.Wait()
 }
 
 func (hc *HuobiClient) Name() string {
@@ -21,14 +29,14 @@ func (hc *HuobiClient) Name() string {
 }
 
 func (hc *HuobiClient) Query(client influx.Client, output chan string) {
-	var wg sync.WaitGroup
 	for name, handle := range hc.Handlers {
-		wg.Add(1)
-		go func(name string, handle func() (string, markets.Metric)) {
-			defer wg.Done()
-			jsonString, metric := handle()
+		hc.wg.Add(1)
+		go func(name string, handle func() (string, markets.Metric, error)) {
+			defer hc.wg.Done()
+			jsonString, metric, err := handle()
 
-			if jsonString == "" {
+			if err != nil {
+				log.Println(err)
 				return
 			}
 
@@ -38,7 +46,6 @@ func (hc *HuobiClient) Query(client influx.Client, output chan string) {
 			metric.Write(client, name)
 		}(name, handle)
 	}
-	wg.Wait()
 }
 
 func (hc *HuobiClient) Metrics() []string {

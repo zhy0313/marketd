@@ -13,6 +13,7 @@ type Market interface {
 }
 
 type Client interface {
+	Close()
 	Name() string
 	Query(client influx.Client, output chan string)
 }

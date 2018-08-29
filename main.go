@@ -24,6 +24,7 @@ var (
 
 	services = markets.AllMarkets()
 	infoChan = make(chan string)
+	done     = make(chan bool)
 )
 
 func market(c echo.Context) error {
@@ -50,26 +51,39 @@ func market(c echo.Context) error {
 	}
 }
 
-func list(c echo.Context) error {
-	done := make(chan struct{})
+func index(c echo.Context) error {
 	defer close(infoChan)
+	defer close(done)
+
 	for _, srv := range services {
 		m, err := markets.Open(srv)
 		if err != nil {
 			log.Fatal(err)
 		}
 		m.Query(influxdb.Client, infoChan)
+
+		done <- true
+		read(m)
 	}
 
-	done <- struct{}{}
+	return c.String(200, "Everything is over")
+}
 
-	select {
-	case <-done:
-		c.String(200, "Everything is over")
-	case info := <-infoChan:
-		log.Println(info)
+func read(cl markets.Client) {
+	for {
+		if <-done {
+			cl.Close()
+			return
+		}
+
+		js, more := <-infoChan
+		if more {
+			log.Println(js)
+		} else {
+			close(infoChan)
+			return
+		}
 	}
-	return nil
 }
 
 func main() {
@@ -94,19 +108,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logFile, err := os.OpenFile(cfg.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	_, err = os.OpenFile(cfg.LogPath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.SetOutput(logFile)
 
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Logger.SetLevel(1)
 
-	e.GET("/", list)
+	e.GET("/", index)
 	e.GET("/ws", market)
+
 	e.Logger.Fatal(e.Start(cfg.Listen))
 }

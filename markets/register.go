@@ -14,10 +14,10 @@ func Register(name string, market Market) {
 	marketsMu.Lock()
 	defer marketsMu.Unlock()
 	if market == nil {
-		panic("sql: Register driver is nil")
+		panic("Register market is nil")
 	}
 	if _, dup := markets[name]; dup {
-		panic("sql: Register called twice for driver " + name)
+		panic("Register called twice for market " + name)
 	}
 	markets[name] = market
 }
@@ -25,11 +25,10 @@ func Register(name string, market Market) {
 func unregisterAllMarkets() {
 	marketsMu.Lock()
 	defer marketsMu.Unlock()
-	// For tests.
 	markets = make(map[string]Market)
 }
 
-// Drivers returns a sorted list of the names of the registered drivers.
+// Markets returns a sorted list of the names of the registered markets.
 func AllMarkets() []string {
 	marketsMu.RLock()
 	defer marketsMu.RUnlock()
