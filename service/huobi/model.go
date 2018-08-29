@@ -3,7 +3,7 @@ package huobi
 import (
 	"encoding/json"
 
-	influx "github.com/influxdata/influxdb/client/v2"
+	"github.com/gnuos/marketd/engine"
 )
 
 //查询币种返回的数据
@@ -14,7 +14,7 @@ type CurrencysReturn struct {
 	ErrMsg  string   `json:"err-msg"`
 }
 
-func (cr *CurrencysReturn) Write(client influx.Client, name string) {
+func (cr *CurrencysReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -39,7 +39,7 @@ type KLineReturn struct {
 	ErrMsg  string      `json:"err-msg"`  // 错误提示
 }
 
-func (kld *KLineReturn) Write(client influx.Client, name string) {
+func (kld *KLineReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -60,7 +60,7 @@ type MarketDepthReturn struct {
 	ErrMsg  string      `json:"err-msg"`
 }
 
-func (md *MarketDepthReturn) Write(client influx.Client, name string) {
+func (md *MarketDepthReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -85,7 +85,7 @@ type MarketDetailReturn struct {
 	ErrMsg  string       `json:"err-msg"`
 }
 
-func (mdr *MarketDetailReturn) Write(client influx.Client, name string) {
+func (mdr *MarketDetailReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -104,7 +104,7 @@ type SymbolsReturn struct {
 	ErrMsg  string        `json:"err-msg"`
 }
 
-func (sr *SymbolsReturn) Write(client influx.Client, name string) {
+func (sr *SymbolsReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -130,7 +130,7 @@ type TickerReturn struct {
 	ErrMsg  string `json:"err-msg"`
 }
 
-func (t *TickerReturn) Write(client influx.Client, name string) {
+func (t *TickerReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -141,7 +141,7 @@ type TimestampReturn struct {
 	ErrMsg  string `json:"err-msg"`
 }
 
-func (tsr *TimestampReturn) Write(client influx.Client, name string) {
+func (tsr *TimestampReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -168,7 +168,7 @@ type TradeReturn struct {
 	ErrMsg  string      `json:"err-msg"`
 }
 
-func (tr *TradeReturn) Write(client influx.Client, name string) {
+func (tr *TradeReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }
 
@@ -195,6 +195,6 @@ type TradeDetailReturn struct {
 	ErrMsg  string      `json:"err-msg"`  // 错误提示
 }
 
-func (tdr *TradeDetailReturn) Write(client influx.Client, name string) {
+func (tdr *TradeDetailReturn) Write(db *engine.InfluxDB, dbname string, table string) {
 	return
 }

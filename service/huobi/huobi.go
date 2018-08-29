@@ -1,20 +1,18 @@
 package huobi
 
 import (
-	"log"
 	"sync"
 
+	"github.com/gnuos/marketd/engine"
 	"github.com/gnuos/marketd/markets"
-	influx "github.com/influxdata/influxdb/client/v2"
+	"github.com/labstack/gommon/log"
 )
-
-type HandleFunc func() (string, markets.Metric, error)
 
 type Huobi struct{}
 
-type HuobiClient struct {
-	db influx.Client
+type HandleFunc func() (string, markets.Metric, error)
 
+type HuobiClient struct {
 	MarketAPI map[string]string
 	TradeAPI  map[string]string
 	Handlers  map[string]HandleFunc
@@ -27,42 +25,42 @@ func (hc *HuobiClient) Name() string {
 	return "huobi"
 }
 
-func (hc *HuobiClient) Query() chan string {
+func (hc *HuobiClient) Query(rows *markets.Rows) (out chan string) {
 	var wg sync.WaitGroup
-	out := make(chan string)
+	out = make(chan string)
 
 	for name, handle := range hc.Handlers {
 		wg.Add(1)
-		go func(name string, handle HandleFunc) {
-			jsonString, metric, err := handle()
 
+		//开goroutine去获取火币的API信息，把每次的消息都发到管道中
+		//name: 相当于表的名字
+		//handle: 用于获取具体接口数据的函数
+		go func(name string, result *markets.Rows, handle HandleFunc) {
+			defer wg.Done()
+			jsonString, metric, err := handle()
 			if err != nil {
-				log.Println(name+": ", err)
+				log.Error(err)
 				return
 			}
-			out <- name + " ===> " + jsonString
 
-			metric.Write(hc.db, name)
-
-			wg.Done()
-		}(name, handle)
+			result.Add(name, metric)
+			out <- jsonString
+		}(name, rows, handle)
 	}
 	go func() {
 		wg.Wait()
 		close(out)
 	}()
 
-	return out
+	return
 }
 
-func (hc *HuobiClient) Metrics() []string {
-	var metrics = make([]string, 0)
-
-	for k, _ := range hc.Handlers {
-		metrics = append(metrics, k)
+func (hc *HuobiClient) Write(db *engine.InfluxDB, dbname string, rows *markets.Rows) error {
+	for table, metric := range rows.Data {
+		metric.Write(db, dbname, table)
 	}
 
-	return metrics
+	return db.Close()
 }
 
 func (h *Huobi) Open(name string) (markets.Client, error) {

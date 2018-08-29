@@ -1,4 +1,4 @@
-package utils
+package client
 
 import (
 	"bytes"
@@ -116,6 +116,7 @@ func (b *browser) jsonRequest(method, path string, body interface{}, configure f
 
 	return b.performRequest(method, path, buf, func(req *http.Request) {
 		req.Header.Set("Content-Type", "application/json; charset=utf-8")
+		req.Header.Add("Accept-Language", "zh-cn")
 		if configure != nil {
 			configure(req)
 		}
@@ -227,16 +228,9 @@ func HttpGet(req HttpRequest, data interface{}) (string, error) {
 		return "", err
 	}
 
-	// body, err := ioutil.ReadAll(resp.Body)
-	// if nil != err {
-	// 	log.Println(err)
-	// }
-
-	// log.Println(string(body))
-
-	// if err = resp.Unmarshal(data); err != nil {
-	// 	return "", err
-	// }
+	if err = resp.Unmarshal(data); err != nil {
+		return "", err
+	}
 
 	return resp.String(), nil
 }

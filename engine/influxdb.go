@@ -30,6 +30,10 @@ func Open(url string) (*InfluxDB, error) {
 	return db, nil
 }
 
+func (db *InfluxDB) Close() error {
+	return db.Client.Close()
+}
+
 func (db *InfluxDB) Query(dbname string, cmd string) (res []influx.Result, err error) {
 	defer db.Client.Close()
 

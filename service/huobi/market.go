@@ -2,7 +2,7 @@ package huobi
 
 import (
 	"github.com/gnuos/marketd/markets"
-	"github.com/gnuos/marketd/utils"
+	"github.com/gnuos/marketd/utils/client"
 )
 
 const (
@@ -42,12 +42,12 @@ var (
 
 func genericFunc(url string, query map[string]string, data markets.Metric) HandleFunc {
 	return func() (string, markets.Metric, error) {
-		request := utils.HttpRequest{
+		request := client.HttpRequest{
 			Url:       url,
 			Payload:   query,
 			UserAgent: UA,
 		}
-		jsonStr, err := utils.HttpGet(request, data)
+		jsonStr, err := client.HttpGet(request, data)
 		if err != nil {
 			return "", nil, err
 		}
@@ -65,46 +65,23 @@ func genericFunc(url string, query map[string]string, data markets.Metric) Handl
 // 获取数量, [1-2000]
 // return: string
 func getKLine() (string, markets.Metric, error) {
-	data := new(KLineReturn)
-
-	request := utils.HttpRequest{
-		Url: marketAPI["kline"],
-		Payload: map[string]string{
+	getJson := genericFunc(
+		tradeAPI["kline"],
+		map[string]string{
 			"symbol": "btcusdt",
 			"period": "1min",
 			"size":   "3",
 		},
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+		new(KLineReturn))
+	return getJson()
 }
 
 // 获取聚合行情
 // 交易对, btcusdt, bccbtc......
 // return: string
 func getTicker() (string, markets.Metric, error) {
-	data := new(TickerReturn)
-
-	request := utils.HttpRequest{
-		Url: marketAPI["detail_merged"],
-		Payload: map[string]string{
-			"symbol": "btcusdt",
-		},
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+	getJson := genericFunc(tradeAPI["detail_merged"], map[string]string{"symbol": "btcusdt"}, new(TickerReturn))
+	return getJson()
 }
 
 // 获取交易深度信息
@@ -112,67 +89,24 @@ func getTicker() (string, markets.Metric, error) {
 // Depth类型, step0、step1......stpe5 (合并深度0-5, 0时不合并)
 // return: string
 func getMarketDepth() (string, markets.Metric, error) {
-	data := new(MarketDepthReturn)
-
-	request := utils.HttpRequest{
-		Url: marketAPI["depth"],
-		Payload: map[string]string{
-			"symbol": "btcusdt",
-			"type":   "step1",
-		},
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+	getJson := genericFunc(tradeAPI["depth"], map[string]string{"symbol": "btcusdt", "type": "step1"}, new(MarketDepthReturn))
+	return getJson()
 }
 
 // 获取交易细节信息
 // 交易对, btcusdt, bccbtc......
 // return: string
 func getTradeDetail() (string, markets.Metric, error) {
-	data := new(TradeDetailReturn)
-
-	request := utils.HttpRequest{
-		Url: marketAPI["trade"],
-		Payload: map[string]string{
-			"symbol": "btcusdt",
-		},
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+	getJson := genericFunc(tradeAPI["trade"], map[string]string{"symbol": "btcusdt"}, new(TradeDetailReturn))
+	return getJson()
 }
 
 // 获取Market Detail 24小时成交量数据
 // 交易对, btcusdt, bccbtc......
 // return: string
 func getMarketDetail() (string, markets.Metric, error) {
-	data := new(MarketDetailReturn)
-
-	request := utils.HttpRequest{
-		Url: marketAPI["detail"],
-		Payload: map[string]string{
-			"symbol": "btcusdt",
-		},
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+	getJson := genericFunc(tradeAPI["detail"], map[string]string{"symbol": "btcusdt"}, new(MarketDetailReturn))
+	return getJson()
 }
 
 //------------------------------------------------------------------------------------------
