@@ -15,7 +15,7 @@ type Market interface {
 type Client interface {
 	Close()
 	Name() string
-	Query(client influx.Client, output chan string)
+	Query() chan string
 }
 
 func Open(name string) (Client, error) {

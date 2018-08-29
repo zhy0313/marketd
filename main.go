@@ -23,8 +23,6 @@ var (
 	configPath = flag.String("config", "", "Configuration file path.")
 
 	services = markets.AllMarkets()
-	infoChan = make(chan string)
-	done     = make(chan bool)
 )
 
 func market(c echo.Context) error {
@@ -52,38 +50,17 @@ func market(c echo.Context) error {
 }
 
 func index(c echo.Context) error {
-	defer close(infoChan)
-	defer close(done)
-
 	for _, srv := range services {
 		m, err := markets.Open(srv)
 		if err != nil {
 			log.Fatal(err)
 		}
-		m.Query(influxdb.Client, infoChan)
-
-		done <- true
-		read(m)
-	}
-
-	return c.String(200, "Everything is over")
-}
-
-func read(cl markets.Client) {
-	for {
-		if <-done {
-			cl.Close()
-			return
-		}
-
-		js, more := <-infoChan
-		if more {
-			log.Println(js)
-		} else {
-			close(infoChan)
-			return
+		for info := range m.Query() {
+			log.Println(info)
 		}
 	}
+
+	return c.String(200, "{}")
 }
 
 func main() {

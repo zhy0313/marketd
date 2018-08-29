@@ -43,16 +43,16 @@ func cloneRequest(req *http.Request) *http.Request {
 
 // An implementation of http.ProxyFromEnvironment that isn't broken
 func proxyFromEnvironment(req *http.Request) (*url.URL, error) {
-	proxy := os.Getenv("http_proxy")
+	proxy := os.Getenv("https_proxy")
 	if proxy == "" {
-		proxy = os.Getenv("HTTP_PROXY")
+		proxy = os.Getenv("HTTPS_PROXY")
 	}
 	if proxy == "" {
 		return nil, nil
 	}
 
 	proxyURL, err := url.Parse(proxy)
-	if err != nil || !strings.HasPrefix(proxyURL.Scheme, "http") {
+	if err != nil || !strings.HasPrefix(proxyURL.Scheme, "https") {
 		if proxyURL, err := url.Parse("http://" + proxy); err == nil {
 			return proxyURL, nil
 		}
@@ -178,12 +178,12 @@ func (res *HttpResponse) String() string {
 }
 
 func (res *HttpResponse) Unmarshal(dest interface{}) (err error) {
-	defer res.Body.Close()
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return
+		return err
 	}
+
+	// log.Println(res.Request.URL.String())
 
 	return json.Unmarshal(body, dest)
 }
@@ -227,11 +227,16 @@ func HttpGet(req HttpRequest, data interface{}) (string, error) {
 		return "", err
 	}
 
-	if err = resp.Unmarshal(data); err != nil {
-		return "", err
-	}
+	// body, err := ioutil.ReadAll(resp.Body)
+	// if nil != err {
+	// 	log.Println(err)
+	// }
 
-	outString := resp.String()
+	// log.Println(string(body))
 
-	return outString, nil
+	// if err = resp.Unmarshal(data); err != nil {
+	// 	return "", err
+	// }
+
+	return resp.String(), nil
 }

@@ -12,8 +12,6 @@ const (
 	UA = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36"
 )
 
-type HandleFunc func(string, map[string]string) func() (string, markets.Metric)
-
 var (
 	marketAPI = map[string]string{
 		"kline":         HUOBI_MARKET + "/history/kline",
@@ -30,7 +28,7 @@ var (
 		"timestamp": HUOBI_TRADE + "/common/timestamp",
 	}
 
-	handlers = map[string]func() (string, markets.Metric, error){
+	handlers = map[string]HandleFunc{
 		"kline":         getKLine,
 		"detail_merged": getTicker,
 		"depth":         getMarketDepth,
@@ -42,7 +40,7 @@ var (
 	}
 )
 
-func genericFunc(url string, query map[string]string, data markets.Metric) func() (string, markets.Metric, error) {
+func genericFunc(url string, query map[string]string, data markets.Metric) HandleFunc {
 	return func() (string, markets.Metric, error) {
 		request := utils.HttpRequest{
 			Url:       url,
@@ -74,7 +72,7 @@ func getKLine() (string, markets.Metric, error) {
 		Payload: map[string]string{
 			"symbol": "btcusdt",
 			"period": "1min",
-			"size":   "",
+			"size":   "3",
 		},
 		UserAgent: UA,
 	}
@@ -183,39 +181,15 @@ func getMarketDetail() (string, markets.Metric, error) {
 // 查询系统支持的所有交易及精度
 // return: string
 func getSymbols() (string, markets.Metric, error) {
-	data := new(SymbolsReturn)
-
-	request := utils.HttpRequest{
-		Url:       tradeAPI["symbols"],
-		Payload:   nil,
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+	getJson := genericFunc(tradeAPI["symbols"], nil, new(SymbolsReturn))
+	return getJson()
 }
 
 // 查询系统支持的所有币种
 // return: string
 func getCurrencys() (string, markets.Metric, error) {
-	data := new(CurrencysReturn)
-
-	request := utils.HttpRequest{
-		Url:       tradeAPI["currencys"],
-		Payload:   nil,
-		UserAgent: UA,
-	}
-
-	jsonStr, err := utils.HttpGet(request, data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return jsonStr, data, nil
+	getJson := genericFunc(tradeAPI["currencys"], nil, new(CurrencysReturn))
+	return getJson()
 }
 
 // 查询系统当前时间戳

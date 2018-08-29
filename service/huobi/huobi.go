@@ -8,44 +8,51 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
+type HandleFunc func() (string, markets.Metric, error)
+
 type Huobi struct{}
 
 type HuobiClient struct {
-	closed chan struct{}
-	wg     sync.WaitGroup
+	db influx.Client
 
 	MarketAPI map[string]string
 	TradeAPI  map[string]string
-	Handlers  map[string]func() (string, markets.Metric, error)
+	Handlers  map[string]HandleFunc
 }
 
 func (hc *HuobiClient) Close() {
-	close(hc.closed)
-	hc.wg.Wait()
 }
 
 func (hc *HuobiClient) Name() string {
 	return "huobi"
 }
 
-func (hc *HuobiClient) Query(client influx.Client, output chan string) {
+func (hc *HuobiClient) Query() chan string {
+	var wg sync.WaitGroup
+	out := make(chan string)
+
 	for name, handle := range hc.Handlers {
-		hc.wg.Add(1)
-		go func(name string, handle func() (string, markets.Metric, error)) {
-			defer hc.wg.Done()
+		wg.Add(1)
+		go func(name string, handle HandleFunc) {
 			jsonString, metric, err := handle()
 
 			if err != nil {
-				log.Println(name+":", err)
+				log.Println(name+": ", err)
 				return
 			}
+			out <- name + " ===> " + jsonString
 
-			log.Println(jsonString)
+			metric.Write(hc.db, name)
 
-			output <- jsonString
-			metric.Write(client, name)
+			wg.Done()
 		}(name, handle)
 	}
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	return out
 }
 
 func (hc *HuobiClient) Metrics() []string {
