@@ -8,14 +8,17 @@ import (
 
 	"github.com/devfeel/dotweb"
 	"github.com/gnuos/marketd/engine"
+	"github.com/gnuos/marketd/markets"
 	_ "github.com/gnuos/marketd/service"
 	"github.com/labstack/gommon/log"
 )
 
 var (
-	configPath = flag.String("config", "marketd.ini", "Configuration file path.")
-
 	influxdb *engine.InfluxDB
+
+	services = markets.AllMarkets()
+
+	configPath = flag.String("config", "marketd.ini", "Configuration file path.")
 )
 
 func main() {
@@ -28,7 +31,7 @@ func main() {
 
 	flag.Parse()
 
-	if len(os.Args) < 3 {
+	if _, err := os.Open(*configPath); os.IsNotExist(err) {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -48,7 +51,8 @@ func main() {
 	app := dotweb.New()
 	app.SetProductionMode()
 
-	app.HttpServer.GET("/", index)
-	app.HttpServer.WebSocket("/ws", market)
-	log.Fatal(app.StartServer(cfg.Listen))
+	app.HttpServer.GET("/", indexHandler)
+	app.HttpServer.WebSocket("/ws", serveWS)
+
+	log.Fatal(app.ListenAndServe(cfg.Listen))
 }
