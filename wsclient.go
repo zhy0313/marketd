@@ -85,14 +85,10 @@ func (c *Client) pushLoop() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				rows := &markets.Rows{
-					Data: make(map[string]markets.Metric),
-				}
 
-				for info := range m.Query(rows) {
-					if err := c.ws.SendMessage(info); err != nil {
-						log.Error(err)
-					}
+				info := m.Query()
+				if err := c.ws.SendMessage(info); err != nil {
+					log.Error(err)
 				}
 			}
 		}

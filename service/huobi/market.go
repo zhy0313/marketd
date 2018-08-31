@@ -1,7 +1,9 @@
 package huobi
 
 import (
-	"github.com/gnuos/marketd/markets"
+	"net/http"
+	"net/url"
+
 	"github.com/gnuos/marketd/utils/client"
 )
 
@@ -29,30 +31,41 @@ var (
 	}
 
 	handlers = map[string]HandleFunc{
-		"kline":         getKLine,
-		"detail_merged": getTicker,
-		"depth":         getMarketDepth,
-		"trade":         getTradeDetail,
-		"detail":        getMarketDetail,
-		// "symbols":       getSymbols,
-		"currencys": getCurrencys,
-		"timestamp": getTimestamp,
+		"kline":         getKLine(),
+		"detail_merged": getTicker(),
+		"depth":         getMarketDepth(),
+		"trade":         getTradeDetail(),
+		"detail":        getMarketDetail(),
+		// "symbols":       getSymbols(),
+		"currencys": getCurrencys(),
+		"timestamp": getTimestamp(),
 	}
 )
 
-func genericFunc(url string, query map[string]string, data markets.Metric) HandleFunc {
-	return func() (string, markets.Metric, error) {
-		request := client.HttpRequest{
-			Url:       url,
-			Payload:   query,
-			UserAgent: UA,
-		}
-		jsonStr, err := client.HttpGet(request, data)
-		if err != nil {
-			return "", nil, err
+func genericFunc(url string, query url.Values) HandleFunc {
+	return func() (string, error) {
+		var path = url
+		var params = ""
+
+		header := make(http.Header)
+		header.Set("User-Agent", UA)
+
+		path = url
+		if query != nil {
+			params = client.Map2UrlQuery(query)
+			path = url + "?" + params
 		}
 
-		return jsonStr, data, nil
+		request := &client.HttpRequest{
+			Url:    path,
+			Header: header,
+		}
+		jsonStr, err := client.HttpGet(request)
+		if err != nil {
+			return "", err
+		}
+
+		return jsonStr, nil
 	}
 }
 
@@ -64,49 +77,50 @@ func genericFunc(url string, query map[string]string, data markets.Metric) Handl
 // K线类型, 1min, 5min, 15min......
 // 获取数量, [1-2000]
 // return: string
-func getKLine() (string, markets.Metric, error) {
-	getJson := genericFunc(
-		marketAPI["kline"],
-		map[string]string{
-			"symbol": "btcusdt",
-			"period": "1min",
-			"size":   "3",
-		},
-		new(KLineReturn))
-	return getJson()
+func getKLine() HandleFunc {
+	query := url.Values{
+		"symbol": []string{"btcusdt"},
+		"period": []string{"1min"},
+		"size":   []string{"3"},
+	}
+
+	return genericFunc(marketAPI["kline"], query)
 }
 
 // 获取聚合行情
 // 交易对, btcusdt, bccbtc......
 // return: string
-func getTicker() (string, markets.Metric, error) {
-	getJson := genericFunc(marketAPI["detail_merged"], map[string]string{"symbol": "btcusdt"}, new(TickerReturn))
-	return getJson()
+func getTicker() HandleFunc {
+	query := url.Values{"symbol": []string{"btcusdt"}}
+	return genericFunc(marketAPI["detail_merged"], query)
 }
 
 // 获取交易深度信息
 // 交易对, btcusdt, bccbtc......
 // Depth类型, step0、step1......stpe5 (合并深度0-5, 0时不合并)
 // return: string
-func getMarketDepth() (string, markets.Metric, error) {
-	getJson := genericFunc(marketAPI["depth"], map[string]string{"symbol": "btcusdt", "type": "step1"}, new(MarketDepthReturn))
-	return getJson()
+func getMarketDepth() HandleFunc {
+	query := url.Values{
+		"symbol": []string{"btcusdt"},
+		"type":   []string{"step1"},
+	}
+	return genericFunc(marketAPI["depth"], query)
 }
 
 // 获取交易细节信息
 // 交易对, btcusdt, bccbtc......
 // return: string
-func getTradeDetail() (string, markets.Metric, error) {
-	getJson := genericFunc(marketAPI["trade"], map[string]string{"symbol": "btcusdt"}, new(TradeDetailReturn))
-	return getJson()
+func getTradeDetail() HandleFunc {
+	query := url.Values{"symbol": []string{"btcusdt"}}
+	return genericFunc(marketAPI["trade"], query)
 }
 
 // 获取Market Detail 24小时成交量数据
 // 交易对, btcusdt, bccbtc......
 // return: string
-func getMarketDetail() (string, markets.Metric, error) {
-	getJson := genericFunc(marketAPI["detail"], map[string]string{"symbol": "btcusdt"}, new(MarketDetailReturn))
-	return getJson()
+func getMarketDetail() HandleFunc {
+	query := url.Values{"symbol": []string{"btcusdt"}}
+	return genericFunc(marketAPI["detail"], query)
 }
 
 //------------------------------------------------------------------------------------------
@@ -114,21 +128,18 @@ func getMarketDetail() (string, markets.Metric, error) {
 
 // 查询系统支持的所有交易及精度
 // return: string
-func getSymbols() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["symbols"], nil, new(SymbolsReturn))
-	return getJson()
+func getSymbols() HandleFunc {
+	return genericFunc(tradeAPI["symbols"], nil)
 }
 
 // 查询系统支持的所有币种
 // return: string
-func getCurrencys() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["currencys"], nil, new(CurrencysReturn))
-	return getJson()
+func getCurrencys() HandleFunc {
+	return genericFunc(tradeAPI["currencys"], nil)
 }
 
 // 查询系统当前时间戳
 // return: string
-func getTimestamp() (string, markets.Metric, error) {
-	getJson := genericFunc(tradeAPI["timestamp"], nil, new(TimestampReturn))
-	return getJson()
+func getTimestamp() HandleFunc {
+	return genericFunc(tradeAPI["timestamp"], nil)
 }

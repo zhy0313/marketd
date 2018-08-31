@@ -1,39 +1,29 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-
 	"github.com/devfeel/dotweb"
 	"github.com/gnuos/marketd/markets"
-	"github.com/labstack/gommon/log"
 )
 
-func indexHandler(ctx dotweb.Context) error {
-	var maps = make(map[string]map[string]markets.Metric)
+var (
+	services = markets.AllMarkets()
+)
+
+func allMarket(ctx dotweb.Context) error {
+	res := "{"
 	for _, srv := range services {
-		m, err := markets.Open(srv)
-		if err != nil {
-			log.Fatal(err)
-		}
-		rows := &markets.Rows{
-			Data: make(map[string]markets.Metric),
-		}
-
-		for info := range m.Query(rows) {
-			fmt.Fprintln(ioutil.Discard, info)
-		}
-
-		maps[m.Name()] = rows.Data
+		data := GetMarket(srv)
+		res += (`"` + srv + `":{` + data + "},")
 	}
 
-	res, err := json.Marshal(maps)
-	if err != nil {
-		return err
-	}
+	return ctx.WriteBlob("application/json;charset=UTF-8", []byte(res[:len(res)-1]+"}"))
+}
 
-	return ctx.WriteBlob("application/json", res)
+func oneMarket(ctx dotweb.Context) error {
+	name := ctx.GetRouterName("name")
+	data := GetMarket(name)
+
+	return ctx.WriteBlob("application/json;charset=UTF-8", []byte("{"+data+"}"))
 }
 
 func serveWS(ctx dotweb.Context) error {

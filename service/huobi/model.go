@@ -2,8 +2,6 @@ package huobi
 
 import (
 	"encoding/json"
-
-	"github.com/gnuos/marketd/engine"
 )
 
 //查询币种返回的数据
@@ -12,10 +10,6 @@ type CurrencysReturn struct {
 	Data    []string `json:"data"`   // 系统支持的所有币种
 	ErrCode string   `json:"err-code"`
 	ErrMsg  string   `json:"err-msg"`
-}
-
-func (cr *CurrencysReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
 }
 
 type KLineData struct {
@@ -39,10 +33,6 @@ type KLineReturn struct {
 	ErrMsg  string      `json:"err-msg"`  // 错误提示
 }
 
-func (kld *KLineReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
-}
-
 type MarketDepth struct {
 	ID   uint64      `json:"id"`   // 消息ID
 	Ts   uint64      `json:"ts"`   // 消息声称事件, 单位: 毫秒
@@ -58,10 +48,6 @@ type MarketDepthReturn struct {
 	Ch      string      `json:"ch"`     //  数据所属的Channel, 格式: market.$symbol.depth.$type
 	ErrCode string      `json:"err-code"`
 	ErrMsg  string      `json:"err-msg"`
-}
-
-func (md *MarketDepthReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
 }
 
 type MarketDetail struct {
@@ -85,10 +71,6 @@ type MarketDetailReturn struct {
 	ErrMsg  string       `json:"err-msg"`
 }
 
-func (mdr *MarketDetailReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
-}
-
 type SymbolsData struct {
 	BaseCurrency    string `json:"base-currency"`    // 基础币种
 	QuoteCurrency   string `json:"quote-currency"`   // 计价币种
@@ -102,10 +84,6 @@ type SymbolsReturn struct {
 	Data    []SymbolsData `json:"data"`   // 交易及精度数据
 	ErrCode string        `json:"err-code"`
 	ErrMsg  string        `json:"err-msg"`
-}
-
-func (sr *SymbolsReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
 }
 
 type Ticker struct {
@@ -130,19 +108,11 @@ type TickerReturn struct {
 	ErrMsg  string `json:"err-msg"`
 }
 
-func (t *TickerReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
-}
-
 type TimestampReturn struct {
 	Status  string `json:"status"` // 请求状态
 	Data    uint64 `json:"data"`   // 时间戳
 	ErrCode string `json:"err-code"`
 	ErrMsg  string `json:"err-msg"`
-}
-
-func (tsr *TimestampReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
 }
 
 type TradeData struct {
@@ -168,10 +138,6 @@ type TradeReturn struct {
 	ErrMsg  string      `json:"err-msg"`
 }
 
-func (tr *TradeReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
-}
-
 type TradeDetailData struct {
 	ID        json.Number `json:"id"`        // 成交ID
 	Price     float64     `json:"price"`     // 成交价
@@ -193,8 +159,4 @@ type TradeDetailReturn struct {
 	Ch      string      `json:"ch"`       // 数据所属的Channel, 格式: market.$symbol.trade.detail
 	ErrCode string      `json:"err-code"` // 错误代码
 	ErrMsg  string      `json:"err-msg"`  // 错误提示
-}
-
-func (tdr *TradeDetailReturn) Write(db *engine.InfluxDB, dbname string, table string) {
-	return
 }

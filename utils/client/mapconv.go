@@ -3,6 +3,7 @@ package client
 import (
 	"net/url"
 	"sort"
+	"strings"
 )
 
 // 对Map按着ASCII码进行排序
@@ -38,10 +39,17 @@ func MapValueEncodeURI(mapValue map[string]string) map[string]string {
 // 将map格式的请求参数转换为字符串格式的
 // mapParams: map格式的参数键值对
 // return: 查询字符串
-func Map2UrlQuery(mapParams map[string]string) string {
+func Map2UrlQuery(mapParams url.Values) string {
 	var strParams string
 	for key, value := range mapParams {
-		strParams += (key + "=" + value + "&")
+		var v string
+		if len(value) > 1 {
+			v = strings.Join(value, ",")
+		} else {
+			v = value[0]
+		}
+
+		strParams += (key + "=" + v + "&")
 	}
 
 	if 0 < len(strParams) {
@@ -54,7 +62,7 @@ func Map2UrlQuery(mapParams map[string]string) string {
 // 将map格式的请求参数转换为字符串格式的,并按照Map的key升序排列
 // mapParams: map格式的参数键值对
 // return: 查询字符串
-func Map2UrlQueryBySort(mapParams map[string]string) string {
+func Map2UrlQueryBySort(mapParams url.Values) string {
 	var keys []string
 	for key := range mapParams {
 		keys = append(keys, key)
@@ -63,7 +71,14 @@ func Map2UrlQueryBySort(mapParams map[string]string) string {
 
 	var strParams string
 	for _, key := range keys {
-		strParams += key + "=" + mapParams[key] + "&"
+		var v string
+		if len(mapParams[key]) > 1 {
+			v = strings.Join(mapParams[key], ",")
+		} else {
+			v = mapParams[key][0]
+		}
+
+		strParams += (key + "=" + v + "&")
 	}
 
 	if 0 < len(strParams) {
