@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/devfeel/dotweb"
-	"github.com/gnuos/marketd/markets"
 	_ "github.com/gnuos/marketd/service"
 	"github.com/labstack/gommon/log"
 )
@@ -78,16 +77,11 @@ func (c *Client) pushLoop() {
 		case <-ticker.C: //发送心跳信息
 			c.send <- "__PING__"
 		default:
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			//持续向客户端发送消息
 			for _, srv := range services {
-				m, err := markets.Open(srv)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				info := m.Query()
-				if err := c.ws.SendMessage(info); err != nil {
+				data := GetMarket(srv)
+				if err := c.ws.SendMessage(`{"` + srv + `":` + data + "}"); err != nil {
 					log.Error(err)
 				}
 			}

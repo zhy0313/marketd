@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -100,6 +101,7 @@ func (b *browser) performRequestUrl(method string, url *url.URL, body io.Reader,
 
 	httpResponse, err := b.httpClient.Do(req)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
