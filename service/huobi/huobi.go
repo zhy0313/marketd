@@ -27,7 +27,7 @@ func (hc *HuobiClient) Name() string {
 func (hc *HuobiClient) Query() string {
 	var wg sync.WaitGroup
 
-	var out = ""
+	var out = "{"
 
 	for name, handle := range hc.Handlers {
 		wg.Add(1)
@@ -49,7 +49,7 @@ func (hc *HuobiClient) Query() string {
 
 	wg.Wait()
 
-	return out[:len(out)-1]
+	return out[:len(out)-1] + "}"
 }
 
 func (h *Huobi) Open(name string) (markets.Client, error) {

@@ -13,7 +13,7 @@ func allMarket(ctx dotweb.Context) error {
 	res := "{"
 	for _, srv := range services {
 		data := GetMarket(srv)
-		res += (`"` + srv + `":{` + data + "},")
+		res += (`"` + srv + `":` + data + ",")
 	}
 
 	return ctx.WriteBlob("application/json;charset=UTF-8", []byte(res[:len(res)-1]+"}"))
@@ -23,7 +23,7 @@ func oneMarket(ctx dotweb.Context) error {
 	name := ctx.GetRouterName("name")
 	data := GetMarket(name)
 
-	return ctx.WriteBlob("application/json;charset=UTF-8", []byte("{"+data+"}"))
+	return ctx.WriteBlob("application/json;charset=UTF-8", []byte(data))
 }
 
 func serveWS(ctx dotweb.Context) error {
